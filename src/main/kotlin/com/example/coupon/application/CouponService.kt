@@ -5,10 +5,10 @@ import com.example.coupon.domain.Coupon
 import com.example.coupon.domain.CouponRepository
 import com.example.coupon.domain.Issuance
 import com.example.coupon.domain.IssuanceRepository
-import com.example.coupon.support.AlreadyIssuedException
+import com.example.coupon.infrastructure.messaging.InMemoryIssuanceQueue
+import com.example.coupon.infrastructure.messaging.IssuanceRequested
 import com.example.coupon.support.CouponNotFoundException
 import com.example.coupon.support.NotStartedException
-import com.example.coupon.support.SoldOutException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -18,6 +18,7 @@ class CouponService(
     private val couponRepository: CouponRepository,
     private val issuanceRepository: IssuanceRepository,
     private val couponIssuer: CouponIssuer,
+    private val issuanceQueue: InMemoryIssuanceQueue,
 ) {
 
     @Transactional
@@ -41,27 +42,27 @@ class CouponService(
             .orElseThrow { CouponNotFoundException() }
 
         val now = LocalDateTime.now()
-
         if (!coupon.isBookingOpen(now)) {
             throw NotStartedException()
         }
-        if (coupon.isSoldOut()) {
-            throw SoldOutException()
-        }
-        if (issuanceRepository.existsByUserIdAndCouponId(userId, couponId)) {
-            throw AlreadyIssuedException()
-        }
 
-        couponIssuer.tryIssue(couponId)
-        couponRepository.incrementIssuedQuantity(couponId)
+        couponIssuer.tryIssue(couponId, userId)
 
-        return issuanceRepository.save(
-            Issuance(
-                userId = userId,
+        val expiresAt = now.plusDays(coupon.validityDays.toLong())
+        issuanceQueue.enqueue(
+            IssuanceRequested(
                 couponId = couponId,
-                issuedAt = now,
-                expiresAt = now.plusDays(coupon.validityDays.toLong()),
+                userId = userId,
+                issueAt = now,
+                expiresAt = expiresAt
             )
+        )
+
+        return Issuance(
+            userId = userId,
+            couponId = couponId,
+            issuedAt = now,
+            expiresAt = expiresAt,
         )
     }
 }
