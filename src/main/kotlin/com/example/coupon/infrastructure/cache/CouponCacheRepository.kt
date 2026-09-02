@@ -1,11 +1,12 @@
 package com.example.coupon.infrastructure.cache
 
 import com.example.coupon.application.CacheMetrics
-import com.example.coupon.application.CouponPolicy
+import com.example.coupon.application.CouponIssuePolicy
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Repository
 import tools.jackson.databind.ObjectMapper
 import java.time.Duration
+import java.util.UUID
 
 @Repository
 class CouponCacheRepository(
@@ -14,26 +15,58 @@ class CouponCacheRepository(
     private val properties: CacheProperties,
     private val cacheMetrics: CacheMetrics,
 ) {
-    fun getIssuePolicyOrLoad(id: Long, loader: () -> CouponPolicy): CouponPolicy =
+    private val singleFlightScript = listLuaScript("lua/cache-single-flight.lua")
+    private val releaseLockScript = longLuaScript("lua/release-lock.lua")
+
+    fun getIssuePolicyOrLoad(id: Long, loader: () -> CouponIssuePolicy): CouponIssuePolicy =
         getOrLoad(
-            key = "coupon:$id:issue-policy",
+            cacheKey = "coupon:$id:issue-policy",
+            lockKey = "coupon:$id:issue-policy:lock",
             loader = loader,
         )
 
 
     private fun getOrLoad(
-        key: String,
-        loader: () -> CouponPolicy,
-    ): CouponPolicy {
-        redis.opsForValue().get(key)?.let { cached ->
-            cacheMetrics.incrementCouponCacheHit()
+        cacheKey: String,
+        lockKey: String,
+        loader: () -> CouponIssuePolicy,
+    ): CouponIssuePolicy {
+        val token = UUID.randomUUID().toString().toString()
+        repeat(MAX_RETRIES) {
+            val result = redis.runForStrings(
+                singleFlightScript,
+                listOf(cacheKey, lockKey),
+                token, LOCK_TTL_MS
+            )
 
-            return mapper.readValue(cached, CouponPolicy::class.java)
+            when (result[0]) {
+                "HIT" -> {
+                    cacheMetrics.incrementCouponCacheHit()
+                    return mapper.readValue(result[1], CouponIssuePolicy::class.java)
+                }
+                "LOAD" -> return try {
+                    cacheMetrics.incrementCouponDbRead()
+                    val response = loader()
+                    val json = mapper.writeValueAsString(response)
+                    redis.opsForValue().set(cacheKey, json, Duration.ofMillis(properties.ttlMs))
+                    response
+                } finally {
+                    redis.runForLong(
+                        releaseLockScript,
+                        listOf(lockKey),
+                        token,
+                    )
+                }
+                "WAIT" -> Thread.sleep(WAIT_BACKOFF_MS)
+            }
         }
-        cacheMetrics.incrementCouponDbRead()
-        val response = loader()
-        redis.opsForValue().set(key, mapper.writeValueAsString(response), Duration.ofMillis(properties.ttlMs))
+        throw IllegalStateException("coupon cache process timeout (key=$cacheKey)")
 
-        return response
+    }
+
+    private companion object {
+        const val MAX_RETRIES = 50
+        const val WAIT_BACKOFF_MS = 20L
+        const val LOCK_TTL_MS = 3_000L
     }
 }
