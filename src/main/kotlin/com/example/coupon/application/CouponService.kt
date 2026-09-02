@@ -4,10 +4,8 @@ import com.example.coupon.api.dto.CreateCouponRequest
 import com.example.coupon.domain.Coupon
 import com.example.coupon.domain.CouponRepository
 import com.example.coupon.domain.Issuance
-import com.example.coupon.infrastructure.cache.CacheProperties
 import com.example.coupon.infrastructure.messaging.IssuanceRequestProducer
 import com.example.coupon.infrastructure.messaging.IssuanceRequested
-import com.example.coupon.support.CouponNotFoundException
 import com.example.coupon.support.NotStartedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,8 +16,7 @@ class CouponService(
     private val couponRepository: CouponRepository,
     private val couponIssuer: CouponIssuer,
     private val issuanceRequestProducer: IssuanceRequestProducer,
-    private val cacheProperties: CacheProperties,
-    private val couponMetrics: CacheMetrics
+    private val couponIssuePolicyReader: CouponIssuePolicyReader,
 ) {
 
     @Transactional
@@ -39,21 +36,16 @@ class CouponService(
 
     @Transactional
     fun issue(couponId: Long, userId: Long): Issuance {
-        couponMetrics.incrementCouponDbRead()
-        Thread.sleep(cacheProperties.simulatedLoadLatencyMs)
-
-
-        val coupon = couponRepository.findById(couponId)
-            .orElseThrow { CouponNotFoundException() }
+        val policy = couponIssuePolicyReader.get(couponId)
 
         val now = LocalDateTime.now()
-        if (!coupon.isBookingOpen(now)) {
+        if (!policy.isBookingOpen(now)) {
             throw NotStartedException()
         }
 
         couponIssuer.tryIssue(couponId, userId)
 
-        val expiresAt = now.plusDays(coupon.validityDays.toLong())
+        val expiresAt = now.plusDays(policy.validityDays.toLong())
         issuanceRequestProducer.publish(
             IssuanceRequested(
                 couponId = couponId,
