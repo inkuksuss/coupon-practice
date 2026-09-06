@@ -1,5 +1,6 @@
 package com.example.coupon.application
 
+import com.example.coupon.infrastructure.cache.IssuanceRedisRepository
 import com.example.coupon.support.AlreadyIssuedException
 import com.example.coupon.support.SoldOutException
 import org.springframework.core.io.ClassPathResource
@@ -9,33 +10,18 @@ import org.springframework.stereotype.Component
 
 @Component
 class CouponIssuer(
-    private val redisTemplate: StringRedisTemplate,
+    private val issuanceRedisRepository: IssuanceRedisRepository
 ) {
-
-    private val script: RedisScript<Long> = RedisScript.of(
-        ClassPathResource("lua/issue.lua"),
-        Long::class.java
-    )
-
     fun tryIssue(couponId: Long, userId: Long) {
-        val raw = redisTemplate.execute(
-            script,
-            listOf(stockKey(couponId), usersKey(couponId)),
-            userId.toString()
-        ) ?: error("Lua script result is null")
-
-        when (raw) {
+        when (issuanceRedisRepository.tryIssue(couponId, userId)) {
             1L -> Unit
             0L -> throw SoldOutException()
             -1L -> throw AlreadyIssuedException()
-            else -> error("Unexpected raw value '${raw}'")
+            else -> error("Unexpected raw value")
         }
     }
 
     fun initStock(couponId: Long, totalQuantity: Int) {
-        redisTemplate.opsForValue().set(stockKey(couponId), totalQuantity.toString())
+        issuanceRedisRepository.initStock(couponId, totalQuantity)
     }
-
-    private fun stockKey(couponId: Long): String = "coupon:$couponId:stock"
-    private fun usersKey(couponId: Long): String = "coupon:$couponId:users"
 }

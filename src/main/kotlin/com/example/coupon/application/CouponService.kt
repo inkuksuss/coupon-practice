@@ -7,6 +7,7 @@ import com.example.coupon.domain.Issuance
 import com.example.coupon.infrastructure.messaging.IssuanceRequestProducer
 import com.example.coupon.infrastructure.messaging.IssuanceRequested
 import com.example.coupon.support.NotStartedException
+import com.example.coupon.support.SoldOutException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -17,6 +18,7 @@ class CouponService(
     private val couponIssuer: CouponIssuer,
     private val issuanceRequestProducer: IssuanceRequestProducer,
     private val couponIssuePolicyReader: CouponIssuePolicyReader,
+    private val soldOutState: SoldOutState,
 ) {
 
     @Transactional
@@ -36,6 +38,10 @@ class CouponService(
 
     @Transactional
     fun issue(couponId: Long, userId: Long): Issuance {
+        if (soldOutState.isSoldOut(couponId)) {
+            throw SoldOutException()
+        }
+
         val policy = couponIssuePolicyReader.get(couponId)
 
         val now = LocalDateTime.now()
