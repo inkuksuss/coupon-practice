@@ -14,6 +14,8 @@ class IssuanceTransactionalWriter(
 
     @Transactional
     fun insertAndIncrement(event: IssuanceRequested) {
+        if (issuanceRepository.existsByUserIdAndCouponId(event.userId, event.couponId)) return
+
         issuanceRepository.save(
             Issuance(
                 userId = event.userId,
@@ -25,4 +27,7 @@ class IssuanceTransactionalWriter(
 
         couponRepository.incrementIssuedQuantity(event.couponId)
     }
+
+    fun isAlreadyApplied(event: IssuanceRequested): Boolean =
+        issuanceRepository.existsByUserIdAndCouponId(event.userId, event.couponId)
 }

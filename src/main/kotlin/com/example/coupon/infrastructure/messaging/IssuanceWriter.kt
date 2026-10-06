@@ -15,6 +15,7 @@ class IssuanceWriter(
         try {
             transactional.insertAndIncrement(event)
         } catch (e: DataIntegrityViolationException) {
+            if (!transactional.isAlreadyApplied(event)) throw e
             log.debug { "UNIQUE 위반 멱등 처리: userId=${event.userId}, couponId=${event.couponId}" }
         }
     }
