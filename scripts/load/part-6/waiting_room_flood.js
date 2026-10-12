@@ -4,7 +4,7 @@ import http from 'k6/http';
 import { Counter } from 'k6/metrics';
 
 const COUPON_ID = __ENV.COUPON_ID || '1';
-const BASES = (__ENV.BASES || 'http://localhost:8080').split(',');
+const BASES = (__ENV.BASES || 'http://localhost:9090').split(',');
 const RATE = Number(__ENV.RATE || 1000);
 const DURATION = __ENV.DURATION || '20s';
 

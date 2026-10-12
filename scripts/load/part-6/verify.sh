@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
-BASE="${BASE_URL:-http://localhost:8080}"
+BASE="${BASE_URL:-http://localhost:9090}"
 QUANTITY="${QUANTITY:-1000000}"
 
 [[ -f src/main/kotlin/com/apiece/coupon/application/RedisWaitingRoom.kt ]] || {

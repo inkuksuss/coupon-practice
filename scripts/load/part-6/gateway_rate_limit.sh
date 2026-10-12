@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# part-6-2 Gateway Rate Limit 검증. 어뷰저 요청 급증 중 서버(앱 8080)에 도달하는 건 토큰 한도만큼뿐,
+# part-6-2 Gateway Rate Limit 검증. 어뷰저 요청 급증 중 서버(앱 9090)에 도달하는 건 토큰 한도만큼뿐,
 # 나머지는 Gateway(8090)에서 429 로 컷. 사용: ./scripts/load/part-6/gateway_rate_limit.sh
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
 BASE="${BASE_URL:-http://localhost:8090}"
-APPLICATION_BASE="${APPLICATION_BASE_URL:-http://localhost:8080}"
+APPLICATION_BASE="${APPLICATION_BASE_URL:-http://localhost:9090}"
 DURATION="${DURATION:-10s}"
 ABUSER_RATE="${ABUSER_RATE:-200}"
 NORMAL_RATE="${NORMAL_RATE:-20}"
