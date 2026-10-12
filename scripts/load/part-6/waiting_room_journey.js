@@ -5,7 +5,7 @@ import { sleep } from 'k6';
 import { Counter, Trend } from 'k6/metrics';
 
 const COUPON_ID = __ENV.COUPON_ID || '1';
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:9090';
 const USERS = Number(__ENV.USERS || 200);
 const POLL_INTERVAL_SECONDS = Number(__ENV.POLL_INTERVAL_SECONDS || 1);
 const POLL_JITTER_SECONDS = Number(__ENV.POLL_JITTER_SECONDS || 0.25);

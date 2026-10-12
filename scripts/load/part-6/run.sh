@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
-BASE="${BASE_URL:-http://localhost:8080}"
+BASE="${BASE_URL:-http://localhost:9090}"
 RATE="${RATE:-1000}"
 DURATION="${DURATION:-20s}"
 QUANTITY="${QUANTITY:-1000000}"
@@ -47,7 +47,7 @@ waiting_room() {
   local admit_per_second="${COUPON_WAITING_ROOM_ADMIT_PER_SECOND:-100}"
   local pass_ttl_ms="${COUPON_WAITING_ROOM_PASS_TTL_MS:-30000}"
   local tolerance_percent="${TOLERANCE_PERCENT:-30}"
-  local secondary="${SECONDARY_BASE_URL:-http://localhost:8081}"
+  local secondary="${SECONDARY_BASE_URL:-http://localhost:9091}"
 
   [[ "$DURATION" =~ ^[1-9][0-9]*s$ ]] || { echo "DURATION은 20s처럼 초 단위로 입력해야 한다" >&2; exit 1; }
   local seconds="${DURATION%s}"

@@ -1,4 +1,4 @@
-package com.apiece.coupon.batch
+package com.example.coupon.batch
 
 import com.example.coupon.domain.CouponRepository
 import com.example.coupon.domain.IssuanceRepository

@@ -4,7 +4,7 @@
 # 명령 실패 / 미정의 변수 / 파이프 중간 실패 시 즉시 종료
 set -euo pipefail
 
-BASE="${BASE_URL:-http://localhost:8080}"
+BASE="${BASE_URL:-http://localhost:9090}"
 QUANTITY="${QUANTITY:-5000}"
 
 [[ "$QUANTITY" =~ ^[1-9][0-9]*$ ]] || { echo "QUANTITY는 양의 정수여야 한다" >&2; exit 1; }

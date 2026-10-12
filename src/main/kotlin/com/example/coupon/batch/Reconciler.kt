@@ -1,7 +1,5 @@
 package com.example.coupon.batch
 
-import com.apiece.coupon.batch.CouponReconcileOutcome
-import com.apiece.coupon.batch.CouponReconciler
 import com.example.coupon.domain.CouponRepository
 import com.example.coupon.infrastructure.cache.ReconcileProperties
 import com.example.coupon.infrastructure.cache.CouponReconcileRedisRepository
