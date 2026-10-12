@@ -3,7 +3,7 @@ import http from 'k6/http';
 import { Counter } from 'k6/metrics';
 
 const COUPON_ID = __ENV.COUPON_ID || '1';
-const BASE = __ENV.BASE_URL || 'http://localhost:8090';
+const BASE = __ENV.BASE_URL || 'http://localhost:9092';
 const DURATION = __ENV.DURATION || '10s';
 const ABUSER_RATE = Number(__ENV.ABUSER_RATE || 200);
 const NORMAL_RATE = Number(__ENV.NORMAL_RATE || 20);

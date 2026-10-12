@@ -1,0 +1,28 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: coupon-gateway
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # 외부에 공개할 사용자 API만 명시하고 한도를 적용한다. 관리자와 메트릭 API는 라우팅하지 않는다.
+            - id: public-user-api
+              uri: ${COUPON_SERVICE_URI:http://localhost:9090}
+              predicates:
+                - Path=/api/waiting-room/**,/api/coupons/*/issue,/api/issuances/*/use,/api/users/me/issuances
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userIdKeyResolver}"
+                    # Token Bucket: 초당 replenishRate 채움, 순간 최대 burstCapacity.
+                    redis-rate-limiter.replenishRate: ${RATE_LIMIT_REPLENISH:5}
+                    redis-rate-limiter.burstCapacity: ${RATE_LIMIT_BURST:10}
+                    redis-rate-limiter.requestedTokens: 1

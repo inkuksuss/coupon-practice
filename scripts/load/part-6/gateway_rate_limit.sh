@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 
-BASE="${BASE_URL:-http://localhost:8090}"
+BASE="${BASE_URL:-http://localhost:9092}"
 APPLICATION_BASE="${APPLICATION_BASE_URL:-http://localhost:9090}"
 DURATION="${DURATION:-10s}"
 ABUSER_RATE="${ABUSER_RATE:-200}"
