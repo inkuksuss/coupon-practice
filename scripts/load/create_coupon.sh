@@ -6,5 +6,5 @@ set -euo pipefail
 
 curl -fsS -X POST http://localhost:9090/api/coupons \
   -H 'Content-Type: application/json' \
-  -d '{"name":"load test","totalQuantity":30000,"validityDays":7}' \
+  -d '{"name":"load test","totalQuantity":20000,"validityDays":7}' \
   | jq -r '.id'

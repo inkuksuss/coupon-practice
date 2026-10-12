@@ -5,6 +5,7 @@ import com.example.coupon.api.dto.CreateCouponRequest
 import com.example.coupon.api.dto.IssuanceResponse
 import com.example.coupon.application.CouponService
 import com.example.coupon.application.WaitingRoom
+import com.example.coupon.support.NoWaitingRoomPassException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
