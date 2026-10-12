@@ -1,5 +1,7 @@
 package com.example.coupon.api.dto
 
+import com.example.coupon.batch.ReconcileReport
+
 class ReconcileRunResponse(
     val autoFixed: Int,
     val driftAlerts: Int,

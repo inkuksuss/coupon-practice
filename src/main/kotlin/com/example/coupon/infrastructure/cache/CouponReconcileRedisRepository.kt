@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository
 import java.util.concurrent.TimeUnit
 
 @Repository
-class ReconcileRedisRepository(
+class CouponReconcileRedisRepository(
     private val redisTemplate: RedisTemplate<String, String>
 ) {
 
